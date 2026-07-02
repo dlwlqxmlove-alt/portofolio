@@ -43,19 +43,29 @@ document.querySelectorAll('.mobile-nav__link').forEach(link => {
 /* ── Scroll Spy (IntersectionObserver) ── */
 const navLinks = document.querySelectorAll('.gnb__link');
 
+function setActiveLink(id) {
+    navLinks.forEach(link => {
+        link.classList.toggle('is-active', link.getAttribute('href') === `#${id}`);
+    });
+}
+
+/* 클릭 시 즉시 활성화 */
+navLinks.forEach(link => {
+    link.addEventListener('click', () => {
+        const id = link.getAttribute('href').replace('#', '');
+        setActiveLink(id);
+    });
+});
+
+/* 스크롤 시 자동 감지 — threshold 낮춰서 큰 섹션도 인식 */
 const spyObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         if (!entry.isIntersecting) return;
-        navLinks.forEach(link => {
-            link.classList.toggle(
-                'is-active',
-                link.getAttribute('href') === `#${entry.target.id}`
-            );
-        });
+        setActiveLink(entry.target.id);
     });
 }, {
-    threshold: 0.35,
-    rootMargin: '-60px 0px -40% 0px'
+    threshold: 0.1,
+    rootMargin: '-60px 0px -45% 0px'
 });
 
 document.querySelectorAll('section[id], footer[id]').forEach(el => {
@@ -98,24 +108,61 @@ window.addEventListener('load', () => {
 
     if (!window.ScrollTrigger) return;
 
-    /* Graphic cards */
-    gsap.from('.graphic-card', {
-        scrollTrigger: { trigger: '.graphic-grid', start: 'top 82%' },
-        y: 28, opacity: 0, stagger: .09, duration: .55, ease: 'power3.out'
-    });
-
     /* Timeline */
     gsap.from('.timeline__item', {
         scrollTrigger: { trigger: '.timeline', start: 'top 82%' },
         x: -20, opacity: 0, stagger: .13, duration: .5, ease: 'power3.out'
     });
-
-    /* Process steps */
-    gsap.from('.process-step', {
-        scrollTrigger: { trigger: '.process-steps', start: 'top 82%' },
-        y: 20, opacity: 0, stagger: .1, duration: .5, ease: 'power3.out'
-    });
 });
+
+/* ── Design Tabs ── */
+(function () {
+    const tabs   = document.querySelectorAll('.design-tab');
+    const panels = document.querySelectorAll('.design-panel');
+    if (!tabs.length) return;
+
+    function activate(tabEl) {
+        const target = tabEl.dataset.tab;
+
+        tabs.forEach(t => {
+            const active = t === tabEl;
+            t.classList.toggle('is-active', active);
+            t.setAttribute('aria-selected', active);
+        });
+
+        panels.forEach(panel => {
+            if (panel.id === `panel-${target}`) {
+                panel.classList.add('is-active');
+            } else {
+                panel.classList.remove('is-active');
+            }
+        });
+    }
+
+    tabs.forEach(tab => tab.addEventListener('click', () => activate(tab)));
+}());
+
+/* ── Skill Bar Animations ── */
+(function () {
+    const skillBars = document.querySelector('.skill-bars');
+    if (!skillBars) return;
+
+    const fills = skillBars.querySelectorAll('.skill-bar__fill');
+
+    const barObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+            fills.forEach((fill, i) => {
+                setTimeout(() => {
+                    fill.classList.add('is-animated');
+                }, 150 + i * 160);
+            });
+            barObserver.unobserve(entry.target);
+        });
+    }, { threshold: 0.3 });
+
+    barObserver.observe(skillBars);
+}());
 
 /* ── Project Slider ── */
 (function () {
